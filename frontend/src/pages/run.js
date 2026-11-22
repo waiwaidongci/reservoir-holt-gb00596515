@@ -1,7 +1,7 @@
 import {datasetField, feedback, field} from '../components/common/fields.js';
 import {empty, panel, pill} from '../components/common/panels.js';
 import {table} from '../components/common/table.js';
-import {STATUS} from '../constants/enums.js';
+import {KIND, STATUS} from '../constants/enums.js';
 import {handler} from '../hooks/action.js';
 import {session} from '../stores/session.js';
 import {workspace} from '../stores/workspace.js';
@@ -42,6 +42,7 @@ export async function runPage(route, refresh) {
   }));
   const runList = table([
     {label:'运行',render:item=>link(item.name,`#results/${item.id}`)},
+    {label:'类型',render:item=>KIND[item.kind] || '趋势预测'},
     {label:'状态',render:item=>pill(STATUS[item.status],item.status)},
     {label:'时间',render:item=>date(item.created_at)},
   ],runs,{caption:'运行记录',empty:'首次运行后将在此显示后台状态。'});

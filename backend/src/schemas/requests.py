@@ -28,3 +28,14 @@ class ScheduleRequest(RunRequest):
     recipient: str = Field(min_length=1, max_length=100)
     first_at: datetime
     repeat_daily: bool = False
+
+class PartUpload(Request):
+    version_no: int = Field(ge=1, le=1_000_000)
+    source: str = Field(min_length=1, max_length=120)
+    csv_text: str = Field(min_length=1, max_length=2_000_000)
+
+class ScenarioRunRequest(Request):
+    dataset_id: int = Field(gt=0)
+    version_id: int = Field(gt=0)
+    name: str = Field(min_length=1, max_length=120)
+    params: dict = Field(default_factory=dict)

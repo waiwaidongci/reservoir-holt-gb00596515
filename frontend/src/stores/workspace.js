@@ -18,5 +18,11 @@ export const workspace = {
   deliveries: () => call('/deliveries'),
   schedule: data => call('/schedules', data),
   disable: id => call(`/schedules/${id}/disable`, {}),
+  forecastCurrent: () => call('/forecast/current'),
+  forecastVersions: () => call('/forecast/versions'),
+  forecastPublished: () => call('/forecast/published'),
+  forecastSnapshot: versionNo => call(`/forecast/published/${versionNo}`),
+  receivePart: data => call('/forecast/parts', data),
+  startScenario: data => call('/forecast/runs', data),
   download: (path, filename) => saveFile(path, session.token, filename),
 };

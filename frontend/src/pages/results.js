@@ -15,7 +15,7 @@ export async function results(route, refresh) {
   const job = await workspace.getRun(id);
   const source = datasets.find(item => item.id === job.dataset_id);
   const message = feedback();
-  const finished = item => item.status === 'complete' || item.status === 'failed';
+  const finished = item => item.status === 'complete' || item.status === 'failed' || item.status === 'stale';
   if (!finished(job)) {
     const original = location.hash;
     const status = el('p',{role:'status'},'后台正在计算，完成后会自动展示。');
@@ -38,8 +38,10 @@ export async function results(route, refresh) {
     result.charts.map(plot),
     (result.sections || []).map(item=>panel(item.title,p(item.text))),
     result.tables.map(item=>panel(item.title,table(item.columns,item.rows,{caption:item.title}))))
-    : panel(job.name,pill(STATUS[job.status],job.status),p(job.error,'feedback'),link('返回调整参数',`#run/${job.dataset_id}`,{class:'quiet'}));
-  const inputs = spec.params.map(param=>el('div',{},el('dt',{},param.label),el('dd',{},value(job.params[param.key]))));
+    : panel(job.name,pill(STATUS[job.status],job.status),p(job.error,'feedback'),
+      link(job.kind === 'scenario' ? '返回雨量情景交班' : '返回调整参数', job.kind === 'scenario' ? '#handover' : `#run/${job.dataset_id}`,{class:'quiet'}));
+  const labels = Object.fromEntries([...(spec.params || []), ...(spec.scenario_params || [])].map(param=>[param.key, param.label]));
+  const inputs = Object.entries(job.params || {}).map(([key, val])=>el('div',{},el('dt',{},labels[key] || key),el('dd',{},value(val))));
   return el('div',{},el('div',{class:'two-col'},el('div',{class:'wide-panel'},analysis),
     el('aside',{class:'sidebar-panel'},panel('运行来源',history,
       source && link(source.name,`#inputs/${source.id}`),p(date(job.finished_at),'subtle'),

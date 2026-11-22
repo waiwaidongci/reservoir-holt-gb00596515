@@ -38,7 +38,7 @@ SPEC = {
     "decision": "高位巡检复核",
     "action": "登记巡检决定",
     "modes": ["加密巡检", "补测后重跑", "按班次巡检"],
-    "pages": ["雨水回用值班总览", "晨检液位台账", "池位预测设置", "水位预报与评估", "高位巡检复核", "机电交班报告"],
+    "pages": ["雨水回用值班总览", "晨检液位台账", "池位预测设置", "水位预报与评估", "高位巡检复核", "机电交班报告", "雨量情景交班"],
     "fields": [
         {"key": "reservoir_id", "label": "水池编号", "type": "string", "required": True, "max_length": 40},
         {"key": "reading_date", "label": "晨检日期", "type": "date", "required": True},
@@ -54,3 +54,13 @@ SPEC = {
     "fixture": {"forecast_days": 3, "holdout_days": 3, "alert_level_m": 2.35},
     "axes": "图表横轴为日历日期，纵轴为液位（m）。逐日预报表同时列出两个模型的点预测。",
 }
+
+from .scenarios import PART_FIELDS, SCENARIO_PARAMS  # noqa: E402
+
+SPEC["scenario_params"] = SCENARIO_PARAMS
+SPEC["scenario_fields"] = PART_FIELDS
+SPEC["scenario_methodology"] = [
+    "雨量站按版次分批送情景预报；同一版次内乱序补报按情景和日期取最新修订。",
+    "从同一晨检液位出发，逐日累加各情景的净涨幅，按本版原定权重汇总至少一次触线的概率，权重不重新归一化。",
+    "缺天的情景只计入概率上界；上游更新版次后在算的结果失效，已发布结果在新版算好前仍可查询，较早版次晚算完也不能抢回当前版。",
+]

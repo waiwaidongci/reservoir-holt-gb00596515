@@ -9,12 +9,24 @@ def dataset(item):
 def run(item, detail=False):
     item_view = {'id': item.id, 'dataset_id': item.dataset_id, 'name': item.name, 'status': item.status,
                  'author': item.author, 'review': item.review, 'decision': item.decision,
+                 'kind': item.kind, 'version_id': item.version_id,
                  'created_at': iso(item.created_at), 'finished_at': iso(item.finished_at),
                  'scheduled_at': iso(item.scheduled_at), 'schedule_id': item.schedule_id,
                  'has_export': bool(item.export_file), 'error': item.error}
     if detail:
         item_view.update(params=item.params, result=item.result, review_note=item.review_note)
     return item_view
+
+
+def version(item, entries=0, scenarios=0, published=False):
+    return {'id': item.id, 'version_no': item.version_no, 'source': item.source, 'parts': item.parts,
+            'entries': entries, 'scenarios': scenarios, 'published': published,
+            'author': item.author, 'created_at': iso(item.created_at)}
+
+
+def published(item, version_no, source):
+    return {**item.result, 'version_no': version_no, 'source': source, 'run_id': item.run_id,
+            'published_at': iso(item.published_at)}
 
 
 def schedule(item):

@@ -2,11 +2,13 @@ import logging
 from datetime import date, timedelta
 from sqlalchemy import and_, or_, select
 from src.config.database import Session
-from src.constants.enums import Status
+from src.constants.enums import Kind, Status
+from src.domain import scenarios
 from src.domain.analysis import analyze
 from src.domain.spec import SPEC
 from src.models.jobs import Delivery, Run, Schedule
 from src.models.source import Dataset
+from src.services import forecast
 from src.services.audit import record
 from src.utils.exports import write_report
 from src.utils.time import now
@@ -58,14 +60,15 @@ def claim():
         job.attempt += 1
         job.lease_until = stamp + timedelta(minutes=3)
         records = db.get(Dataset, job.dataset_id).rows
-        return job.id, job.attempt, records, job.params
+        entries = forecast.entries_of(db, job.version_id) if job.kind == Kind.SCENARIO else None
+        return job.id, job.attempt, job.kind, records, entries, job.params
 
 
 def execute(lease):
-    job_id, attempt, rows, params = lease
+    job_id, attempt, kind, rows, entries, params = lease
     result = export = failure = None
     try:
-        result = analyze(rows, params)
+        result = scenarios.compute(rows, entries, params) if kind == Kind.SCENARIO else analyze(rows, params)
         export = write_report(job_id, attempt, result)
     except ValueError as error:
         failure = str(error)[:500]
@@ -83,6 +86,8 @@ def execute(lease):
         job.export_file = export
         job.error = failure
         record(db, 'worker', f'analysis.{job.status}', job.id, attempt=attempt, reason=failure)
+        if not failure and kind == Kind.SCENARIO:
+            forecast.publish(db, job, result)
         if job.schedule_id:
             plan = db.get(Schedule, job.schedule_id)
             ready = not failure and result.get('ready', True)
